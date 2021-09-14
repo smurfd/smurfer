@@ -5,8 +5,8 @@ from _thread import *
 import ssl
 import time
 import threading
-import socket  
-import worker 
+import socket
+import worker
 
 print_lock = threading.Lock()
 w = worker.worker()
@@ -38,7 +38,7 @@ def threaded(c):
       sndjob()
     c.send(data)
   c.close()
-  
+
 def Main():
   host = "127.0.0.1"
   port = 12345
@@ -53,6 +53,6 @@ def Main():
     print_lock.acquire()
     start_new_thread(threaded, (c,))
   s.close()
- 
+
 if __name__ == '__main__':
   Main()

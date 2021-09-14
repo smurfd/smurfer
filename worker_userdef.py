@@ -18,7 +18,7 @@ class worker_userdef:
 
   def receive_job(self):
     print("userdef receiving job")
-    return self.job 
+    return self.job
  
   def receive_data(self):
     print("userdef receiving data")

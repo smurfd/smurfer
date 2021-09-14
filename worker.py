@@ -22,7 +22,7 @@ class worker:
 
   def receive_job(self):
     print("receiving job")
-    return self.job 
+    return self.job
  
   def receive_data(self):
     print("receiving data")
