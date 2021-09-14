@@ -17,7 +17,7 @@ $ pip install -r requirements.txt
 in one terminal, run :
 $ python3 srv.py
 
-in another terminal run : 
+in another terminal run :
 $ python3 cli.py
 
 === srv
