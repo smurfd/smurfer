@@ -49,9 +49,6 @@ $ python3 cli.py
 - disconnect from server
 
 # TODO
-- need more ssl?
-- asyncio instead?
-- Call clib if like libworker.so is available
 - Set pid per worker
 - Send more data
 - pools of server ips/ports to listen on
