@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-# Worker class
-import os.path
-from os import path
+# Userdefined Worker class
+# the idea was to be able to have worker.py be never touched.
+# then what you want to do you add in worker_userdef.py
+import os
 
-class worker_userdef:
+class worker_userdef():
   hasjob="1"
   nojob="0"
   jobstatus="0"
@@ -13,15 +14,13 @@ class worker_userdef:
     pass
 
   def send_job(self,w):
-    print("userdef sending job")
     self.job = w()
 
   def receive_job(self):
-    print("userdef receiving job")
     return self.job
  
   def receive_data(self):
-    print("userdef receiving data")
+    pass
  
   def set_jobstatus(self,j):
     self.jobstatus = j
@@ -37,7 +36,6 @@ class worker_userdef:
 
   def dowork(self,w):
     w()
-    print("userdef wrk done")
 
 def method():
-  print("userdef wurker...")
+  pass

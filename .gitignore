@@ -8,3 +8,9 @@ __pycache__/
 .venv
 env/
 venv/
+
+srv.db*
+cli.db*
+*.key
+*.cert
+libcworker.so
