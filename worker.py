@@ -20,7 +20,7 @@ class worker():
 
   def receive_job(self):
     return self.job
- 
+
   def receive_data(self):
     pass
 

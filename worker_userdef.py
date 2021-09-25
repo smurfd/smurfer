@@ -18,10 +18,10 @@ class worker_userdef():
 
   def receive_job(self):
     return self.job
- 
+
   def receive_data(self):
     pass
- 
+
   def set_jobstatus(self,j):
     self.jobstatus = j
 

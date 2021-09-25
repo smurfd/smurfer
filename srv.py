@@ -4,11 +4,67 @@
 import ssl
 import time
 import threading
+import signal
 import socket
 
 import worker
 import helper
 import db
+
+class Server(threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+    self.shutdown_flag = threading.Event()
+    self.db = db.Database()
+    self.help = helper.Helper()
+
+  def run(self):
+    self.help.crtchk()
+    d = self.db.init_srv()
+    self.db.insert(d, 1, 1, "smurf")
+    self.db.insert(d, 2, 0, "smurf1")
+    jobid = self.db.getjob(d, 1, "smurf")
+    usrid = self.db.getnextid(d)
+
+    while not self.shutdown_flag.is_set():
+      time.sleep(0.5)
+ 
+class ServerSocket(threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+    self.shutdown_flag = threading.Event()
+
+  def run(self):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setblocking(0)
+    s.settimeout(10)
+    s.bind(("127.0.0.1", 12345))
+    s.listen(5)
+
+    w = worker.worker()
+    while not self.shutdown_flag.is_set():
+      try:
+        newsocket, fromaddr = s.accept()
+        self.cs = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
+        typ = self.cs.recv(1) # data received from client
+        data = self.cs.recv(1024)
+        if not data:
+          break
+        if typ == b'1': # Worker has finished his work
+          recvdata(w)
+          sndjob(w)
+        if typ == b'0': # Worker needs work
+          sndjob(w)
+        self.cs.send(data)
+      except IOError as e: # Handle BlockingIOError
+        pass
+    time.sleep(0.5)
+
+class ServiceExit(Exception):
+  pass
+
+def service_shutdown(signum, frame):
+  raise ServiceExit
 
 def wrk():
   time.sleep(6)
@@ -19,51 +75,25 @@ def sndjob(w):
 def recvdata(w):
   w.receive_data()
 
-def threaded(c, lck, w):
-  while True:
-    typ = c.recv(1) # data received from client
-    data = c.recv(1024)
-    if not data: # Close worker connection
-      lck.release()
-      break
-    if typ == b'1': # Worker has finished his job
-      recvdata(w)
-      sndjob(w)
-    if typ == b'0': # Worker needs work
-      sndjob(w)
-    c.send(data)
-  c.close()
+def main():
+  signal.signal(signal.SIGTERM, service_shutdown)
+  signal.signal(signal.SIGINT, service_shutdown)
 
-def srv_init(host,port):
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.bind((host, port))
-  s.listen(5)
-  return s
+  try:
+    s1 = Server()
+    s2 = ServerSocket()
 
-def srv_close(s,sc):
-  cs.shutdown(socket.SHUT_RDWR)
-  cs.close()
-  s.close()
+    s1.start()
+    s2.start()
 
-def Main():
-  pl = threading.Lock()
-  w = worker.worker()
-  s = srv_init("127.0.0.1", 12345)
-  helper.crtchk()
-  d = db.init_srv()
-  db.insert(d, 1, 1, "smurf")
-  #print(db.getjob(d, 1, "smurf"))
-  db.insert(d, 2, 0, "smurf1")
-  jobid = db.getjob(d, 1, "smurf")
-  usrid = db.getnextid(d)
+    while True:
+      time.sleep(0.5)
 
-
-  while True:
-    newsocket, fromaddr = s.accept()
-    cs = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
-    pl.acquire()
-    threading.Thread(target=threaded, args=(cs,pl,w,)).start()
-  srv_close(s,sc)
-
+  except ServiceExit:
+    s1.shutdown_flag.set()
+    s2.shutdown_flag.set()
+    s1.join()
+    s2.join()
+ 
 if __name__ == '__main__':
-  Main()
+  main()
