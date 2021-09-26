@@ -3,9 +3,10 @@
 # Server
 import ssl
 import time
-import threading
 import signal
 import socket
+import struct
+import threading
 
 import worker
 import helper
@@ -30,21 +31,35 @@ class Server(threading.Thread):
       time.sleep(0.5)
  
 class ServerSocket(threading.Thread):
-  def __init__(self):
+  def __init__(self, host, port, test=0):
     threading.Thread.__init__(self)
     self.shutdown_flag = threading.Event()
+    self.host = host
+    self.port = port
+    self.test = test
+    self.s = None
+    self.cs = None
+
+  def __exit__(self, exc_type, exc_value, traceback):
+    self.close()
+
+  def __enter__(self):
+    return self
+
+  def close(self):
+    self.s.close()
 
   def run(self):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setblocking(0)
-    s.settimeout(10)
-    s.bind(("127.0.0.1", 12345))
-    s.listen(5)
+    self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.s.setblocking(0)
+    self.s.settimeout(10)
+    self.s.bind((self.host, self.port))
+    self.s.listen(5)
 
     w = worker.worker()
     while not self.shutdown_flag.is_set():
       try:
-        newsocket, fromaddr = s.accept()
+        newsocket, fromaddr = self.s.accept()
         self.cs = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
         typ = self.cs.recv(1) # data received from client
         data = self.cs.recv(1024)
@@ -56,7 +71,16 @@ class ServerSocket(threading.Thread):
         if typ == b'0': # Worker needs work
           sndjob(w)
         self.cs.send(data)
-      except IOError as e: # Handle BlockingIOError
+        recvlen = self.cs.recv(8) # Receive length of data
+        (length,) = struct.unpack('>Q', recvlen)
+        bigdata = b''
+        while len(bigdata) < length:
+          to_read = length - len(bigdata)
+          bigdata += self.cs.recv(4096 if to_read > 4096 else to_read)
+          self.cs.sendall(b'\00') # Send 0 ack = OK
+        if self.test == 1:
+          break
+      except IOError as e: # Handle BlockingIOError by ignoring
         pass
     time.sleep(0.5)
 
@@ -81,7 +105,7 @@ def main():
 
   try:
     s1 = Server()
-    s2 = ServerSocket()
+    s2 = ServerSocket("127.0.0.1", 12345)
 
     s1.start()
     s2.start()

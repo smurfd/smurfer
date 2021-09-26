@@ -9,7 +9,7 @@ class Helper(threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-# Check if a selfsigned certificate and key exist, if not print how to create them.
+  # Check if a selfsigned certificate and key exist, if not print how to create them.
   def crtchk(self):
     if not os.path.isfile('selfsigned.cert'):
       print("Create a selfsigned cert & key using this command :")
@@ -25,7 +25,7 @@ class Helper(threading.Thread):
   def call_cworker(self):
     if not os.path.isfile('./libcworker.so'):
       print("libcworker.so does not exist. Compile it using this command :")
-      print("gcc -shared -o libcworker.so -fPIC cworker.c")
+      print("$ gcc -shared -o libcworker.so -fPIC cworker.c")
       quit()
     libcwrk = ctypes.CDLL('./libcworker.so')
     print("doing work", libcwrk.dowork(100))

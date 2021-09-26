@@ -1,14 +1,14 @@
 # smurfer
 Need some smurfing done? smurfer smurfs
-Idea is to create a general worker that distributes the working between server and client, and you can define what you want it todo.
+Idea is to create a general worker that distributes the job between server and client, and you can define what you want it todo.
 
 # install
 install pyenv and virtualenv via package manager:
-`brew install pyenv virtualenv`
-`apt install pyenv virtualenv`
-`zypper in pyenv virtualenv`
-`dnf install pyenv virtualenv`
-`emerge -vaD pyenv virtualenv`
+`$ brew install pyenv virtualenv`
+`$ apt install pyenv virtualenv`
+`$ zypper in pyenv virtualenv`
+`$ dnf install pyenv virtualenv`
+`$ emerge -vaD pyenv virtualenv`
 Or grab pyenv manually:
 ```
 $ curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
@@ -28,27 +28,15 @@ $ source ./venv/bin/activate
 $ pip install -r requirements.txt
 ```
 in one terminal, run :
-$ python3 srv.py
+`$ python3 srv.py`
 
 in another terminal run :
-$ python3 cli.py
+`$ python3 cli.py`
 
-# srv
-- wait for connection from client
-- if client has no job, provide new job
-- if client has finished job, receive result and provide new job
-
-# cli
-- connect to server
-- receive job
-- disconnect from server
-- do work
-- connect to server
-- provide result
-- receive new job
-- disconnect from server
+# Testing
+`python3 -m pytest`
 
 # TODO
 - Set pid per worker
-- Send more data
 - pools of server ips/ports to listen on
+- do we need `worker_userdef.py` since we have `cworker.c`?
