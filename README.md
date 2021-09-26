@@ -21,7 +21,7 @@ $ echo "export PATH=\"${PYENV_ROOT}/bin:\$PATH\"" >> ~/.zshrc
 $ echo "eval \"\$(pyenv init -)\"" >> ~/.zshrc
 $ echo "eval \"\$(pyenv virtualenv-init -)\"" >> ~/.zshrc
 ```
-
+After pyenv & virtualenv is installed go ahead and:
 ```
 $ pyenv install 3.8.12 (3.6.x and 3.7.x not supported on Mac m1)
 $ git clone https://github.com/smurfd/smurfer
@@ -31,11 +31,13 @@ $ virtualenv -p $HOME/.pyenv/versions/3.8.12/bin/python3 venv
 $ source ./venv/bin/activate
 $ pip3 install -r requirements.txt
 ```
-in one terminal, run :
+Done.
+
+Now in one terminal, run:
 ```
 $ python3 srv.py
 ```
-in another terminal run :
+in another terminal run:
 ```
 $ python3 cli.py
 ```
