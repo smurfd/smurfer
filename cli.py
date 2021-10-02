@@ -35,7 +35,6 @@ class Client(threading.Thread):
         wrk = self.w.receive_job()
         wrk()
         break
-      bigdata = b'big big big data '*1000
       length = struct.pack('>Q', len(self.biggerdata))
       self.ss.send(self.job.encode('ascii'))
       self.ss.send(message.encode('ascii')) # Send to server

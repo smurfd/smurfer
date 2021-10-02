@@ -10,6 +10,7 @@ class worker_userdef():
   nojob="0"
   jobstatus="0"
   workerid="0"
+
   def job(self):
     pass
 
