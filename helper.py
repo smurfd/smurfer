@@ -13,7 +13,7 @@ class Helper(threading.Thread):
     threading.Thread.__init__(self)
 
   # Check if a selfsigned certificate and key exist, if not print how to create them.
-  def crtchk(self):
+  def crtchk_srv(self):
     if not os.path.isfile('selfsigned.cert'):
       print("Create a selfsigned cert & key using this command :")
       print("$ openssl req -x509 -newkey rsa:2048 -keyout selfsigned.key -nodes -out selfsigned.cert -sha256 -days 1000")
@@ -25,6 +25,13 @@ class Helper(threading.Thread):
       print("$ openssl req -x509 -newkey rsa:2048 -keyout selfsigned.key -nodes -out selfsigned.cert -sha256 -days 1000")
       print("$ openssl rsa -in selfsigned.key -pubout > selfsigned.pub")
       print("use 'localhost' as Common Name")
+      quit()
+
+  def crtchk_cli(self):
+    if not os.path.isfile('selfsigned.pub'):
+      print("You need the public key. Get it by :")
+      print("$ curl https://smurfd.serveblog.net/selfsigned.pub")
+      print("its not there yet... ")
       quit()
 
   def call_cworker(self):
@@ -50,7 +57,20 @@ class Helper(threading.Thread):
       print(e)
       return None
 
-#k = os.urandom(32)
-#dd = b'awholelotsofdata'*100000
-#cc, c,t = enc1(k, dd)
-#pt = dec1(k, cc.nonce, t, c)
+  def cli_enc():
+    # TODO: need to send tag & nonce to server somehow
+    # on the client side:
+    key = RSA.importKey(open('selfsigned.pub').read()) # public
+    k = key.exportKey()
+    k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
+    dd = b'awholelotsofdata'*100000
+    cc,c,t = enc(k_rand, dd) # encrypt on cli using part of pub key
+
+  def srv_dec():
+    # TODO: get tag & nonce from client?
+    # on the server side:
+    pri_key = RSA.importKey(open('selfsigned.key').read()) # private
+    k = pri_key.publickey().exportKey('PEM')
+    k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
+    dd = b'awholelotsofdata'*100000
+    pt = dec(k_rand, cc.nonce, t, c) # decrypt on srv using pub key from priv key

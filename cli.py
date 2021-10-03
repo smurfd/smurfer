@@ -25,7 +25,7 @@ class Client(threading.Thread):
 
   def run(self):
     message = "all work and no play makes smurf a smurfy smurf"
-    self.help.crtchk()
+    self.help.crtchk_cli()
     while not self.shutdown_flag.is_set():
       time.sleep(0.5)
       if self.w.get_jobstatus() == self.w.nojob:

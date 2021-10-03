@@ -20,7 +20,7 @@ class Server(threading.Thread):
     self.help = helper.Helper()
 
   def run(self):
-    self.help.crtchk()
+    self.help.crtchk_srv()
     d = self.db.init_srv()
     self.db.insert(d, 1, 1, "smurf")
     self.db.insert(d, 2, 0, "smurf1")
