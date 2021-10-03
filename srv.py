@@ -38,7 +38,7 @@ class ServerSocket(threading.Thread):
     self.port = port
     self.test = test
     self.s = None
-    self.cs = None
+    self.ss = None
 
   def __exit__(self, exc_type, exc_value, traceback):
     self.close()
@@ -60,9 +60,11 @@ class ServerSocket(threading.Thread):
     while not self.shutdown_flag.is_set():
       try:
         newsocket, fromaddr = self.s.accept()
-        self.cs = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
-        typ = self.cs.recv(1) # data received from client
-        data = self.cs.recv(1024)
+        self.ss = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
+        n, t = self.recv_n_t()
+        helper.srv_dec()
+        typ = self.ss.recv(1) # data received from client
+        data = self.ss.recv(1024)
         if not data:
           break
         if typ == b'1': # Worker has finished his work
@@ -70,19 +72,24 @@ class ServerSocket(threading.Thread):
           sndjob(w)
         if typ == b'0': # Worker needs work
           sndjob(w)
-        self.cs.send(data)
-        recvlen = self.cs.recv(8) # Receive length of data
+        self.ss.send(data)
+        recvlen = self.ss.recv(8) # Receive length of data
         (length,) = struct.unpack('>Q', recvlen)
         bigdata = b''
         while len(bigdata) < length:
           to_read = length - len(bigdata)
-          bigdata += self.cs.recv(4096 if to_read > 4096 else to_read)
-          self.cs.sendall(b'\00') # Send 0 ack = OK
+          bigdata += self.ss.recv(4096 if to_read > 4096 else to_read)
+          self.ss.sendall(b'\00') # Send 0 ack = OK
         if self.test == 1:
           break
       except IOError as e: # Handle BlockingIOError by ignoring
         pass
     time.sleep(0.5)
+
+  def recv_n_t(self):
+    n = self.ss.recv(1024)
+    t = self.ss.recv(1024)
+    return n, t
 
 class ServiceExit(Exception):
   pass

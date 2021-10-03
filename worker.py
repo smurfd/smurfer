@@ -14,9 +14,6 @@ class worker():
 
   def send_job(self,w):
     self.job = w()
-    if os.path.exists('worker_userdef.py') == True:
-      import worker_userdef
-      worker_userdef.worker_userdef().send_job(w)
 
   def receive_job(self):
     return self.job

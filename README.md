@@ -47,4 +47,3 @@ $ python3 cli.py
 # TODO
 - Set pid per worker
 - pools of server ips/ports to listen on
-- do we need `worker_userdef.py` since we have `cworker.c`?

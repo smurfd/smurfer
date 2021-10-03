@@ -26,6 +26,9 @@ class Client(threading.Thread):
   def run(self):
     message = "all work and no play makes smurf a smurfy smurf"
     self.help.crtchk_cli()
+    n, t = helper.cli_enc()
+    cli_send_n_t(n, t)
+
     while not self.shutdown_flag.is_set():
       time.sleep(0.5)
       if self.w.get_jobstatus() == self.w.nojob:
@@ -46,6 +49,10 @@ class Client(threading.Thread):
 
   def setbigdata(self, bd):
     self.biggerdata = bd
+
+  def cli_send_n_t(self, nonce, tag):
+    self.ss.send(nonce)
+    self.ss.send(tag)
 
 def localjob():
   time.sleep(1)

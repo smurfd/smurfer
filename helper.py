@@ -30,7 +30,7 @@ class Helper(threading.Thread):
   def crtchk_cli(self):
     if not os.path.isfile('selfsigned.pub'):
       print("You need the public key. Get it by :")
-      print("$ curl https://smurfd.serveblog.net/selfsigned.pub")
+      print("$ curl https://smurfd.serveblog.net/selfsigned.pub --output selfsigned.pub")
       print("its not there yet... ")
       quit()
 
@@ -42,13 +42,13 @@ class Helper(threading.Thread):
     libcwrk = ctypes.CDLL('./libcworker.so')
     print("doing work", libcwrk.dowork(100))
 
-  def enc(key, data):
+  def enc(self, key, data):
     cipher = AES.new(key, AES.MODE_GCM)
     nonce = cipher.nonce
     ciphertext, tag = cipher.encrypt_and_digest(data)
     return cipher, ciphertext, tag
 
-  def dec(key, nonce, tag, data):
+  def dec(self, key, nonce, tag, data):
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     try:
       cv =  cipher.decrypt_and_verify(data, tag)
@@ -57,20 +57,19 @@ class Helper(threading.Thread):
       print(e)
       return None
 
-  def cli_enc():
-    # TODO: need to send tag & nonce to server somehow
-    # on the client side:
+  def cli_enc(self):
     key = RSA.importKey(open('selfsigned.pub').read()) # public
     k = key.exportKey()
     k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
     dd = b'awholelotsofdata'*100000
     cc,c,t = enc(k_rand, dd) # encrypt on cli using part of pub key
+    return cc, t
 
-  def srv_dec():
-    # TODO: get tag & nonce from client?
-    # on the server side:
+  def srv_dec(self, nonce, tag):
     pri_key = RSA.importKey(open('selfsigned.key').read()) # private
     k = pri_key.publickey().exportKey('PEM')
     k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
     dd = b'awholelotsofdata'*100000
-    pt = dec(k_rand, cc.nonce, t, c) # decrypt on srv using pub key from priv key
+    pt = dec(k_rand, nonce, tag, c) # decrypt on srv using pub key from priv key
+    return pt
+
