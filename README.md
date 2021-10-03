@@ -47,3 +47,4 @@ $ python3 cli.py
 # TODO
 - Set pid per worker
 - pools of server ips/ports to listen on
+- better folder structure
