@@ -10,16 +10,16 @@ class Database(threading.Thread):
     threading.Thread.__init__(self)
 
   def init_srv(self):
-    connection = sqlite3.connect("srv.db")
+    connection = sqlite3.connect("../lib/srv.db")
     cursor = connection.cursor()
-    if os.path.getsize('srv.db') == 0: # Check if this is a newly created db
+    if os.path.getsize('../lib/srv.db') == 0: # Check if this is a newly created db
       cursor.execute("CREATE TABLE workers (id INTEGER PRIMARY KEY AUTOINCREMENT, job INTEGER, usr STRING)")
     return cursor
 
   def init_cli(self):
-    connection = sqlite3.connect("cli.db")
+    connection = sqlite3.connect("../lib/cli.db")
     cursor = connection.cursor()
-    if os.path.getsize('cli.db') == 0: # Check if this is a newly created db
+    if os.path.getsize('../lib/cli.db') == 0: # Check if this is a newly created db
       cursor.execute("CREATE TABLE workers (id INTEGER, usr STRING)")
     return cursor
 

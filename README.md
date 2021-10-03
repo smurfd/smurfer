@@ -35,11 +35,11 @@ Done.
 
 Now in one terminal, run:
 ```
-$ python3 srv.py
+$ python3 src/srv.py
 ```
 in another terminal run:
 ```
-$ python3 cli.py
+$ python3 src/cli.py
 ```
 # Testing
 `python3 -m pytest`
@@ -47,4 +47,3 @@ $ python3 cli.py
 # TODO
 - Set pid per worker
 - pools of server ips/ports to listen on
-- better folder structure

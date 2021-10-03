@@ -60,7 +60,7 @@ class ServerSocket(threading.Thread):
     while not self.shutdown_flag.is_set():
       try:
         newsocket, fromaddr = self.s.accept()
-        self.ss = ssl.wrap_socket(newsocket,server_side=True,certfile="selfsigned.cert",keyfile="selfsigned.key")
+        self.ss = ssl.wrap_socket(newsocket,server_side=True,certfile="../lib/selfsigned.cert",keyfile="../lib/selfsigned.key")
         n, t = self.recv_n_t()
         helper.srv_dec()
         typ = self.ss.recv(1) # data received from client

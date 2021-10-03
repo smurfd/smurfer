@@ -16,7 +16,7 @@ class Client(threading.Thread):
     self.w = worker.worker()
     self.shutdown_flag = threading.Event()
     self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    self.ss = ssl.wrap_socket(self.s,ca_certs="selfsigned.cert",
+    self.ss = ssl.wrap_socket(self.s,ca_certs="../lib/selfsigned.cert",
       cert_reqs=ssl.CERT_REQUIRED)
     self.ss.connect((host, port))
     self.job = "1"

@@ -14,32 +14,32 @@ class Helper(threading.Thread):
 
   # Check if a selfsigned certificate and key exist, if not print how to create them.
   def crtchk_srv(self):
-    if not os.path.isfile('selfsigned.cert'):
+    if not os.path.isfile('../lib/selfsigned.cert'):
       print("Create a selfsigned cert & key using this command :")
-      print("$ openssl req -x509 -newkey rsa:2048 -keyout selfsigned.key -nodes -out selfsigned.cert -sha256 -days 1000")
-      print("$ openssl rsa -in selfsigned.key -pubout > selfsigned.pub")
+      print("$ openssl req -x509 -newkey rsa:2048 -keyout lib/selfsigned.key -nodes -out lib/selfsigned.cert -sha256 -days 1000")
+      print("$ openssl rsa -in lib/selfsigned.key -pubout > lib/selfsigned.pub")
       print("use 'localhost' as Common Name")
       quit()
-    if not os.path.isfile('selfsigned.key'):
+    if not os.path.isfile('../lib/selfsigned.key'):
       print("Create a selfsigned cert & key using this command :")
-      print("$ openssl req -x509 -newkey rsa:2048 -keyout selfsigned.key -nodes -out selfsigned.cert -sha256 -days 1000")
-      print("$ openssl rsa -in selfsigned.key -pubout > selfsigned.pub")
+      print("$ openssl req -x509 -newkey rsa:2048 -keyout lib/selfsigned.key -nodes -out lib/selfsigned.cert -sha256 -days 1000")
+      print("$ openssl rsa -in lib/selfsigned.key -pubout > lib/selfsigned.pub")
       print("use 'localhost' as Common Name")
       quit()
 
   def crtchk_cli(self):
-    if not os.path.isfile('selfsigned.pub'):
+    if not os.path.isfile('../lib/selfsigned.pub'):
       print("You need the public key. Get it by :")
-      print("$ curl https://smurfd.serveblog.net/selfsigned.pub --output selfsigned.pub")
+      print("$ curl https://smurfd.serveblog.net/selfsigned.pub --output lib/selfsigned.pub")
       print("its not there yet... ")
       quit()
 
   def call_cworker(self):
-    if not os.path.isfile('./libcworker.so'):
+    if not os.path.isfile('../lib/libcworker.so'):
       print("libcworker.so does not exist. Compile it using this command :")
-      print("$ gcc -shared -o libcworker.so -fPIC cworker.c")
+      print("$ gcc -shared -o lib/libcworker.so -fPIC src/cworker.c")
       quit()
-    libcwrk = ctypes.CDLL('./libcworker.so')
+    libcwrk = ctypes.CDLL('../lib/libcworker.so')
     print("doing work", libcwrk.dowork(100))
 
   def enc(self, key, data):
@@ -58,7 +58,7 @@ class Helper(threading.Thread):
       return None
 
   def cli_enc(self):
-    key = RSA.importKey(open('selfsigned.pub').read()) # public
+    key = RSA.importKey(open('../lib/selfsigned.pub').read()) # public
     k = key.exportKey()
     k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
     dd = b'awholelotsofdata'*100000
@@ -66,7 +66,7 @@ class Helper(threading.Thread):
     return cc, t
 
   def srv_dec(self, nonce, tag):
-    pri_key = RSA.importKey(open('selfsigned.key').read()) # private
+    pri_key = RSA.importKey(open('../lib/selfsigned.key').read()) # private
     k = pri_key.publickey().exportKey('PEM')
     k_rand = k[27:59] # skip this part : -----BEGIN PUBLIC KEY-----
     dd = b'awholelotsofdata'*100000
