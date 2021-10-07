@@ -19,6 +19,7 @@ class ServerSocket(threading.Thread):
     self.s = None
     self.ss = None
     self.help = helper.Helper()
+    self.w = worker.worker()
 
   def __exit__(self, exc_type, exc_value, traceback):
     self.close()
@@ -32,11 +33,13 @@ class ServerSocket(threading.Thread):
   def run(self):
     self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.s.setblocking(0)
-    self.s.settimeout(10)
+    self.s.settimeout(5)
     self.s.bind((self.host, self.port))
     self.s.listen(5)
 
-    w = worker.worker()
+
+
+  def receiving(self):
     while not self.shutdown_flag.is_set():
       try:
         newsocket, fromaddr = self.s.accept()
@@ -48,10 +51,10 @@ class ServerSocket(threading.Thread):
         if not data:
           break
         if typ == b'1': # Worker has finished his work
-          recvdata(w)
-          sndjob(w)
+          recvdata(self.w)
+          sndjob(self.w)
         if typ == b'0': # Worker needs work
-          sndjob(w)
+          sndjob(self.w)
         self.ss.send(data)
         recvlen = self.ss.recv(8) # Receive length of data
         (length,) = struct.unpack('>Q', recvlen)

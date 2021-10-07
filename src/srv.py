@@ -30,7 +30,8 @@ def main():
 
     s1.start()
     s2.start()
-
+    time.sleep(2)
+    s2.receiving()
     while True:
       time.sleep(0.5)
 

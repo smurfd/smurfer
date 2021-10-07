@@ -7,14 +7,15 @@ import test
 import signal
 import socket
 import struct
+import unittest
 import threading
 
+import db
 import worker
 import helper
-import db
-
-import unittest
-import srv
+import client
+import server
+import serversocket
 
 class TestSmurfer(unittest.TestCase):
 
@@ -22,8 +23,8 @@ class TestSmurfer(unittest.TestCase):
     """
     Test that the server can start
     """
-    s1 = srv.Server()
-    s2 = srv.ServerSocket("127.0.0.1", 12345, 1)
+    s1 = server.Server()
+    s2 = serversocket.ServerSocket("127.0.0.1", 12345, 1)
 
     s1.start()
     s2.start()
@@ -33,6 +34,25 @@ class TestSmurfer(unittest.TestCase):
     s1.join()
     s2.join()
     s2.close()
+
+  def test_client(self):
+    """
+    Test that the client can connect to the server
+    """
+    s1 = server.Server()
+    s2 = serversocket.ServerSocket("127.0.0.1", 12345, 1)
+    c = client.Client("127.0.0.1", 12345, 1)
+    s1.start()
+    s2.start()
+    time.sleep(2)
+    c.start()
+
+    s1.shutdown_flag.set()
+    s2.shutdown_flag.set()
+    s1.join()
+    s2.join()
+    s2.close()
+    #c.join()
 
   def test_sanity(self):
     """
