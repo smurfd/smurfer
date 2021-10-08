@@ -37,6 +37,30 @@ class ServerSocket(threading.Thread):
     self.s.bind((self.host, self.port))
     self.s.listen(5)
 
+  def exchange_cert(self):
+    n, t, c = self.recv_n_t()
+    self.help.srv_dec(n, t, c)
+
+  def exchange_data(self):
+    self.exchange_cert()
+    typ = self.ss.recv(1) # data received from client
+    data = self.ss.recv(1024)
+    if not data:
+      pass
+      #break
+    if typ == b'1': # Worker has finished his work
+      recvdata(self.w)
+      sndjob(self.w)
+    if typ == b'0': # Worker needs work
+      sndjob(self.w)
+    self.ss.send(data)
+    recvlen = self.ss.recv(8) # Receive length of data
+    (length,) = struct.unpack('>Q', recvlen)
+    bigdata = b''
+    while len(bigdata) < length:
+      to_read = length - len(bigdata)
+      bigdata += self.ss.recv(4096 if to_read > 4096 else to_read)
+      self.ss.sendall(b'\00') # Send 0 ack = OK
 
 
   def receiving(self):
@@ -44,25 +68,8 @@ class ServerSocket(threading.Thread):
       try:
         newsocket, fromaddr = self.s.accept()
         self.ss = ssl.wrap_socket(newsocket,server_side=True,certfile="lib/selfsigned.cert",keyfile="lib/selfsigned.key")
-        n, t, c = self.recv_n_t()
-        self.help.srv_dec(n, t, c)
-        typ = self.ss.recv(1) # data received from client
-        data = self.ss.recv(1024)
-        if not data:
-          break
-        if typ == b'1': # Worker has finished his work
-          recvdata(self.w)
-          sndjob(self.w)
-        if typ == b'0': # Worker needs work
-          sndjob(self.w)
-        self.ss.send(data)
-        recvlen = self.ss.recv(8) # Receive length of data
-        (length,) = struct.unpack('>Q', recvlen)
-        bigdata = b''
-        while len(bigdata) < length:
-          to_read = length - len(bigdata)
-          bigdata += self.ss.recv(4096 if to_read > 4096 else to_read)
-          self.ss.sendall(b'\00') # Send 0 ack = OK
+
+        self.exchange_data()
         if self.test == 1:
           break
       except IOError as e: # Handle BlockingIOError by ignoring

@@ -27,29 +27,34 @@ class Client(threading.Thread):
 
   def sending(self):
     self.ss.connect((self.host, self.port))
-    message = "all work and no play makes smurf a smurfy smurf"
     if self.test == 0:
       self.help.crtchk_cli()
-      c, n, t = self.help.cli_enc()
-      self.cli_send_n_t(n, t, c)
+      self.exchange_cert()
+      self.exchange_data()
 
-      while not self.shutdown_flag.is_set():
-        time.sleep(0.5)
-        if self.w.get_jobstatus() == self.w.nojob:
-          self.w.set_jobstatus(self.w.hasjob)
-          self.w.dowork(localjob)
-        elif self.w.get_jobstatus() == self.w.hasjob:
-          wrk = self.w.receive_job()
-          wrk()
-          break
-        length = struct.pack('>Q', len(self.biggerdata))
-        self.ss.send(self.job.encode('ascii'))
-        self.ss.send(message.encode('ascii')) # Send to server
-        self.ss.sendall(length)
-        self.ss.sendall(self.biggerdata)
-        data = self.ss.recv(1024) # Rcv from server
-        ack = self.ss.recv(1)
-        assert len(ack) == 1
+  def exchange_cert(self):
+    c, n, t = self.help.cli_enc()
+    self.cli_send_n_t(n, t, c)
+
+  def exchange_data(self):
+    message = "all work and no play makes smurf a smurfy smurf"
+    while not self.shutdown_flag.is_set():
+      time.sleep(0.5)
+      if self.w.get_jobstatus() == self.w.nojob:
+        self.w.set_jobstatus(self.w.hasjob)
+        self.w.dowork(localjob)
+      elif self.w.get_jobstatus() == self.w.hasjob:
+        wrk = self.w.receive_job()
+        wrk()
+        break
+      length = struct.pack('>Q', len(self.biggerdata))
+      self.ss.send(self.job.encode('ascii'))
+      self.ss.send(message.encode('ascii')) # Send to server
+      self.ss.sendall(length)
+      self.ss.sendall(self.biggerdata)
+      data = self.ss.recv(1024) # Rcv from server
+      ack = self.ss.recv(1)
+      assert len(ack) == 1
 
   def setbigdata(self, bd):
     self.biggerdata = bd
