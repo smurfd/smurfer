@@ -2,6 +2,7 @@
 
 # Server
 import ssl
+import sys
 import time
 import signal
 import socket
@@ -20,13 +21,18 @@ class ServiceExit(Exception):
 def service_shutdown(signum, frame):
   raise ServiceExit
 
-def main():
+def main(argv):
+  if (len(sys.argv) < 3) or (len(sys.argv) > 3):
+    print("Usage: ./src/srv.py <host> <port>")
+    sys.exit(2)
+  host = sys.argv[1]
+  port = int(sys.argv[2])
   signal.signal(signal.SIGTERM, service_shutdown)
   signal.signal(signal.SIGINT, service_shutdown)
 
   try:
     s1 = server.Server()
-    s2 = serversocket.ServerSocket("127.0.0.1", 12345)
+    s2 = serversocket.ServerSocket(host, port)
 
     s1.start()
     s2.start()
@@ -42,4 +48,4 @@ def main():
     s2.join()
  
 if __name__ == '__main__':
-  main()
+  main(sys.argv[1:])
