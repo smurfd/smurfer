@@ -35,15 +35,14 @@ Done.
 
 Now in one terminal, run:
 ```
-$ python3 src/srv.py
+$ python3 src/srv.py <host> <port1> <port2> ...
 ```
 in another terminal run:
 ```
-$ python3 src/cli.py
+$ python3 src/cli.py <host> <port1> <port2> ...
 ```
 # Testing
 `python3 -m pytest`
 
 # TODO
 - Set pid per worker
-- pools of server ips/ports to listen on

@@ -9,3 +9,11 @@ int dowork(int a) {
   }
   return i+a;
 }
+
+int do_server_work(int a) {
+  return a;
+}
+
+int do_client_work(int a) {
+  return a;
+}

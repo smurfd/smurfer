@@ -22,30 +22,42 @@ def service_shutdown(signum, frame):
   raise ServiceExit
 
 def main(argv):
-  if (len(sys.argv) < 3) or (len(sys.argv) > 3):
-    print("Usage: ./src/srv.py <host> <port>")
+  if (len(sys.argv) < 3):
+    print("Usage: ./src/srv.py <host> <port> <port> ...")
     sys.exit(2)
   host = sys.argv[1]
-  port = int(sys.argv[2])
+  argfirstport = 2
+  portlen = len(sys.argv) - argfirstport
+  sr = [None]*portlen
+  ss = [None]*portlen
+  p = [None]*portlen
+  i = argfirstport
+  co = argfirstport
+  actualports=0
+  while i < len(sys.argv):
+    if sys.argv[i].isdigit():
+      p[co - argfirstport] = int(sys.argv[i])
+      co += 1
+      actualports = co - argfirstport
+    i += 1
+
   signal.signal(signal.SIGTERM, service_shutdown)
   signal.signal(signal.SIGINT, service_shutdown)
+  sr[0] = server.Server()
+  sr[0].start()
 
-  try:
-    s1 = server.Server()
-    s2 = serversocket.ServerSocket(host, port)
+  for i in range(actualports):
+    try:
+      ss[i] = serversocket.ServerSocket(host, p[i])
+      ss[i].start()
+      time.sleep(2)
 
-    s1.start()
-    s2.start()
-    time.sleep(2)
-    s2.receiving()
-    while True:
-      time.sleep(0.5)
+    except ServiceExit:
+      #sr[i].sflg.set()
+      ss[i].sflg.set()
+      ss[i].join()
+      ss[i].close()
+  sr[0].join()
 
-  except ServiceExit:
-    s1.shutdown_flag.set()
-    s2.shutdown_flag.set()
-    s1.join()
-    s2.join()
- 
 if __name__ == '__main__':
   main(sys.argv[1:])

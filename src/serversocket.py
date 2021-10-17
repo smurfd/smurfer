@@ -11,15 +11,17 @@ import db
 
 class ServerSocket(threading.Thread):
   def __init__(self, host, port, test=0):
-    threading.Thread.__init__(self)
-    self.shutdown_flag = threading.Event()
+    threading.Thread.__init__(self, group=None)
+    self.test = test
     self.host = host
     self.port = port
-    self.test = test
-    self.s = None
-    self.ss = None
+    self.sock = None # Socket
+    self.ssls = None # SSL Socket
+    self.conn = None
+    self.addr = None
     self.help = helper.Helper()
-    self.w = worker.worker()
+    self.work = worker.worker()
+    self.sflg = threading.Event()
 
   def __exit__(self, exc_type, exc_value, traceback):
     self.close()
@@ -28,65 +30,70 @@ class ServerSocket(threading.Thread):
     return self
 
   def close(self):
-    self.s.close()
+    self.sock.close()
 
   def run(self):
-    self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self.s.setblocking(0)
-    self.s.settimeout(5)
-    self.s.bind((self.host, self.port))
-    self.s.listen(5)
-
-  def exchange_cert(self):
-    n, t, c = self.recv_n_t()
-    self.help.srv_dec(n, t, c)
-
-  def exchange_data(self):
-    self.exchange_cert()
-    typ = self.ss.recv(1) # data received from client
-    data = self.ss.recv(1024)
-    if not data:
-      pass
-      #break
-    if typ == b'1': # Worker has finished his work
-      recvdata(self.w)
-      sndjob(self.w)
-    if typ == b'0': # Worker needs work
-      sndjob(self.w)
-    self.ss.send(data)
-    recvlen = self.ss.recv(8) # Receive length of data
-    (length,) = struct.unpack('>Q', recvlen)
-    bigdata = b''
-    while len(bigdata) < length:
-      to_read = length - len(bigdata)
-      bigdata += self.ss.recv(4096 if to_read > 4096 else to_read)
-      self.ss.sendall(b'\00') # Send 0 ack = OK
-
-
-  def receiving(self):
-    while not self.shutdown_flag.is_set():
+    self.listen()
+    while not self.sflg.is_set():
       try:
-        newsocket, fromaddr = self.s.accept()
-        self.ss = ssl.wrap_socket(newsocket,server_side=True,certfile="lib/selfsigned.cert",keyfile="lib/selfsigned.key")
-
-        self.exchange_data()
+        self.receive()
+        self.exchange_cert()
+        state = self.receive_workstate()
+        data = self.receive_data()
+        if not data:
+          break
         if self.test == 1:
           break
+        self.handle_workstate(state)
+
       except IOError as e: # Handle BlockingIOError by ignoring
         pass
-    time.sleep(0.5)
 
-  def recv_n_t(self):
-    n = self.ss.recv(1024)
-    t = self.ss.recv(1024)
-    recvlen = self.ss.recv(8)
+  def listen(self):
+    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.sock.bind((self.host, self.port))
+    self.sock.listen(10)
+
+  def receive(self):
+    time.sleep(0.5)
+    self.conn, self.addr = self.sock.accept()
+    self.ssls = ssl.wrap_socket(self.conn, server_side=True, certfile="lib/selfsigned.cert", keyfile="lib/selfsigned.key")
+
+  def receive_cert(self):
+    n = self.ssls.recv(1024)
+    t = self.ssls.recv(1024)
+    recvlen = self.ssls.recv(8)
     (length,) = struct.unpack('>Q', recvlen)
     bigdata = b''
     while len(bigdata) < length:
       to_read = length - len(bigdata)
-      bigdata += self.ss.recv(4096 if to_read > 4096 else to_read)
-
+      bigdata += self.ssls.recv(4096 if to_read > 4096 else to_read)
     return n, t, bigdata
+
+  def exchange_cert(self):
+    n, t, c = self.receive_cert()
+    self.help.srv_dec(n, t, c)
+
+  def receive_workstate(self):
+    state = self.ssls.recv(1) # data received from client
+    return state
+
+  def handle_workstate(self, state):
+    if state == b'1': # Worker has finished his work
+      recvdata(self.work)
+      sndjob(self.work)
+    if state == b'0': # Worker needs work
+      sndjob(self.work)
+
+  def receive_data(self):
+    recvlen = self.ssls.recv(8) # Receive length of data
+    (length,) = struct.unpack('>Q', recvlen)
+    bigdata = b''
+    while len(bigdata) < length:
+      to_read = length - len(bigdata)
+      bigdata += self.ssls.recv(4096 if to_read > 4096 else to_read)
+    self.ssls.sendall(b'\00') # Send 0 ack = OK
+    return bigdata
 
 def wrk():
   time.sleep(6)

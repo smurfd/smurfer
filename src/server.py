@@ -12,7 +12,7 @@ import db
 class Server(threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
-    self.shutdown_flag = threading.Event()
+    self.sflg = threading.Event()
     self.db = db.Database()
     self.help = helper.Helper()
 
@@ -24,5 +24,5 @@ class Server(threading.Thread):
     jobid = self.db.getjob(d, 1, "smurf")
     usrid = self.db.getnextid(d)
 
-    while not self.shutdown_flag.is_set():
+    while not self.sflg.is_set():
       time.sleep(0.5)
